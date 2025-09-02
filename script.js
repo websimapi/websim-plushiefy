@@ -2,7 +2,6 @@ import { WebsimSocket } from '@websim/websim-socket';
 
 const room = new WebsimSocket();
 
-const welcomeOverlay = document.getElementById('welcome-overlay');
 const webcamVideo = document.getElementById('webcam-video');
 const webcamCanvas = document.getElementById('webcam-canvas');
 const imagePreview = document.getElementById('image-preview');
@@ -23,15 +22,6 @@ const galleryGrid = document.getElementById('gallery-grid');
 
 let imageDataUrl = null;
 let lastGeneratedData = {};
-
-// --- Welcome Overlay ---
-welcomeOverlay.addEventListener('click', () => {
-    welcomeOverlay.classList.add('hidden');
-    // Set display to none after the transition to remove it from the accessibility tree and prevent interference.
-    setTimeout(() => {
-        welcomeOverlay.style.display = 'none';
-    }, 500); // Should match the transition duration in CSS
-});
 
 // Helper to convert data URL to a File object
 async function dataUrlToFile(dataUrl, fileName) {
@@ -111,20 +101,26 @@ generateBtn.addEventListener('click', async () => {
         const plushieStyle = document.getElementById('plushie-style').value;
         const plushieMaterial = document.getElementById('plushie-material').value;
         const plushieAccessory = document.getElementById('plushie-accessory').value;
+        const includePlushieBackground = document.getElementById('plushie-background-checkbox').checked;
 
         // 1. AI call to analyze image and create a prompt
         const analysisCompletion = await websim.chat.completions.create({
             messages: [
                 {
                     role: "system",
-                    content: `You are an expert prompt engineer for an image generation AI that uses a reference image. Your task is to create a prompt that will modify the reference image. The goal is to turn the subject of the reference image into a plush toy.
+                    content: `You are an expert prompt engineer for an image generation AI that uses a reference image. Your task is to create a prompt that will modify the reference image. The goal is to turn the subject(s) of the reference image into plush toys.
                     
-                    Given the user's choices for style, material, and accessory, construct a short, descriptive prompt. The prompt should focus on the *transformation* into a plushie.
+                    Your instructions are:
+                    1. Identify all primary subjects in the reference image (e.g., people, animals, objects).
+                    2. Construct a short, descriptive prompt that transforms ALL identified subjects into plush toys, according to the user's specified style and material.
+                    3. If an accessory is chosen (and is not 'None'), apply it to the main subject(s) where appropriate (e.g., "all wearing cute bowties").
+                    4. Handle the background based on the user's choice:
+                        - If 'includePlushieBackground' is 'true', describe the background also being transformed into a plushie-like diorama, made of materials like felt, yarn, and cotton.
+                        - If 'includePlushieBackground' is 'false', the prompt should specify a simple, neutral background like "product photography, on a clean white background" to isolate the plushie subjects.
                     
-                    Example: "A cute, chibi-style plush toy of the subject, made of soft yarn, based on the reference image. 3D render, product photography, on a clean white background."
-                    
-                    If an accessory is chosen (and not 'None'), integrate it naturally into the prompt (e.g., "wearing a cute bowtie").
-                    
+                    Example for multiple subjects and no plushie background: "A cute, chibi-style plush toy of the two people, made of soft yarn, based on the reference image. 3D render, product photography, on a clean white background."
+                    Example for single subject with plushie background: "A felt-style plush toy of the dog, wearing a tiny top hat. The background is also a diorama made of felt and stitched fabric, based on the reference image."
+
                     Respond ONLY with a JSON object in the format: { "prompt": "your_generated_prompt_here" }. Do not include any other text or explanation.`,
                 },
                 {
@@ -135,7 +131,8 @@ generateBtn.addEventListener('click', async () => {
                             text: `Generate a prompt to modify a reference image based on these choices:
                             - Style: ${plushieStyle}
                             - Material: ${plushieMaterial}
-                            - Accessory: ${plushieAccessory}`,
+                            - Accessory: ${plushieAccessory}
+                            - Include Plushie Background: ${includePlushieBackground}`,
                         },
                         {
                             type: "image_url",
