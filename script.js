@@ -2,6 +2,20 @@ import { WebsimSocket } from '@websim/websim-socket';
 
 const room = new WebsimSocket();
 
+// View switching
+const creatorView = document.getElementById('creator-view');
+const galleryView = document.getElementById('gallery-view');
+const showCreatorBtn = document.getElementById('show-creator-btn');
+const showGalleryBtn = document.getElementById('show-gallery-btn');
+
+// Step navigation
+const steps = document.querySelectorAll('.step');
+const stepIndicators = document.querySelectorAll('.step-indicator');
+const nextToStep2Btn = document.getElementById('next-to-step-2');
+const backToStep1Btn = document.getElementById('back-to-step-1');
+const startOverBtn = document.getElementById('start-over-btn');
+
+// Core elements
 const webcamVideo = document.getElementById('webcam-video');
 const webcamCanvas = document.getElementById('webcam-canvas');
 const imagePreview = document.getElementById('image-preview');
@@ -32,6 +46,49 @@ async function dataUrlToFile(dataUrl, fileName) {
     const blob = await res.blob();
     return new File([blob], fileName, { type: 'image/png' });
 }
+
+// --- View and Step Management ---
+function showView(viewToShow) {
+    creatorView.classList.add('hidden');
+    galleryView.classList.add('hidden');
+    showCreatorBtn.classList.remove('active');
+    showGalleryBtn.classList.remove('active');
+
+    if (viewToShow === 'creator') {
+        creatorView.classList.remove('hidden');
+        showCreatorBtn.classList.add('active');
+    } else {
+        galleryView.classList.remove('hidden');
+        showGalleryBtn.classList.add('active');
+    }
+}
+
+function showStep(stepNumber) {
+    steps.forEach(step => step.classList.remove('active'));
+    document.getElementById(`step-${stepNumber}`).classList.add('active');
+
+    stepIndicators.forEach(indicator => {
+        indicator.classList.remove('active');
+        if (parseInt(indicator.dataset.step) <= stepNumber) {
+            indicator.classList.add('active');
+        }
+    });
+}
+
+showCreatorBtn.addEventListener('click', () => showView('creator'));
+showGalleryBtn.addEventListener('click', () => showView('gallery'));
+nextToStep2Btn.addEventListener('click', () => showStep(2));
+backToStep1Btn.addEventListener('click', () => showStep(1));
+startOverBtn.addEventListener('click', () => {
+    // Reset state for a new creation
+    imageDataUrl = null;
+    updatePreview(null);
+    resultImage.src = '';
+    shareContainer.classList.add('hidden');
+    promptContainer.classList.add('hidden');
+    document.getElementById('user-prompt-input').value = '';
+    showStep(1);
+});
 
 // --- Webcam Functions ---
 async function startWebcam(facingMode) {
@@ -97,6 +154,7 @@ capturePhotoBtn.addEventListener('click', () => {
     imageDataUrl = webcamCanvas.toDataURL('image/png');
     
     updatePreview(imageDataUrl);
+    nextToStep2Btn.disabled = false;
 
     // Stop webcam and reset buttons
     stopWebcam();
@@ -110,15 +168,23 @@ uploadBtn.addEventListener('change', (event) => {
         reader.onload = (e) => {
             imageDataUrl = e.target.result;
             updatePreview(imageDataUrl);
+            nextToStep2Btn.disabled = false;
         };
         reader.readAsDataURL(file);
     }
 });
 
 function updatePreview(dataUrl) {
-    imagePreview.src = dataUrl;
-    imagePreview.style.display = 'block';
-    previewPlaceholder.style.display = 'none';
+    if (dataUrl) {
+        imagePreview.src = dataUrl;
+        imagePreview.style.display = 'block';
+        previewPlaceholder.style.display = 'none';
+    } else {
+        imagePreview.src = '#';
+        imagePreview.style.display = 'none';
+        previewPlaceholder.style.display = 'block';
+        nextToStep2Btn.disabled = true;
+    }
 }
 
 // --- Generation Function ---
@@ -128,7 +194,8 @@ generateBtn.addEventListener('click', async () => {
         return;
     }
 
-    // Show loading state
+    // Go to step 3 and show loading state
+    showStep(3);
     loadingIndicator.classList.remove('hidden');
     resultImage.style.display = 'none';
     promptContainer.classList.add('hidden');
@@ -272,8 +339,9 @@ shareBtn.addEventListener('click', async () => {
             plushie_accessory: lastGeneratedData.plushie_accessory,
         });
 
-        alert("Plushie shared successfully!");
-        shareContainer.classList.add('hidden');
+        alert("Plushie shared successfully! Check it out in the gallery.");
+        showView('gallery');
+        startOverBtn.click(); // Reset the creator view for next time
 
     } catch (error) {
         console.error("Error sharing plushie:", error);

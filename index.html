@@ -11,10 +11,23 @@
         <header>
             <h1>Plushie Creator</h1>
             <p>Turn anything into a cuddly plush toy!</p>
+            <nav id="main-nav">
+                <button id="show-creator-btn" class="nav-btn active">Create</button>
+                <button id="show-gallery-btn" class="nav-btn">Gallery</button>
+            </nav>
         </header>
 
-        <main>
-            <div class="column" id="input-column">
+        <main id="creator-view">
+            <div id="step-indicator-container">
+                <div class="step-indicator active" data-step="1">1. Image</div>
+                <div class="step-indicator-line"></div>
+                <div class="step-indicator" data-step="2">2. Customize</div>
+                <div class="step-indicator-line"></div>
+                <div class="step-indicator" data-step="3">3. Result</div>
+            </div>
+
+            <!-- Step 1: Image -->
+            <div id="step-1" class="step active">
                 <h2>1. Provide an Image</h2>
                 <div id="image-source">
                     <video id="webcam-video" autoplay playsinline></video>
@@ -31,7 +44,13 @@
                         <input type="file" id="upload-btn" accept="image/*" style="display: none;">
                     </div>
                 </div>
+                <div class="step-nav">
+                    <button id="next-to-step-2" disabled>Next: Customize</button>
+                </div>
+            </div>
 
+            <!-- Step 2: Customize -->
+            <div id="step-2" class="step">
                 <h2>2. Customize Your Plushie</h2>
                 <div id="customization-options">
                     <div class="form-group">
@@ -77,10 +96,14 @@
                     <input type="checkbox" id="plushie-background-checkbox">
                     <label for="plushie-background-checkbox">Make background a plushie too</label>
                 </div>
-                 <button id="generate-btn">3. Generate Plushie!</button>
+                <div class="step-nav">
+                    <button id="back-to-step-1">Back</button>
+                    <button id="generate-btn">Generate Plushie!</button>
+                </div>
             </div>
 
-            <div class="column" id="output-column">
+            <!-- Step 3: Result -->
+            <div id="step-3" class="step">
                 <h2>Your Plushie</h2>
                 <div id="result-container">
                     <div id="loading-indicator" class="hidden">
@@ -94,18 +117,22 @@
                     <p id="prompt-text"></p>
                 </div>
                  <div id="share-container" class="hidden">
-                    <h3>Share Your Creation</h3>
                     <div class="form-group-inline">
                         <input type="checkbox" id="include-portrait-checkbox" checked>
                         <label for="include-portrait-checkbox">Include original image</label>
                     </div>
-                    <button id="share-btn">Share to Gallery</button>
-                    <button id="download-btn">Download Plushie</button>
+                    <div class="button-group">
+                         <button id="share-btn">Share to Gallery</button>
+                         <button id="download-btn">Download</button>
+                    </div>
+                </div>
+                <div class="step-nav">
+                     <button id="start-over-btn">Create Another</button>
                 </div>
             </div>
         </main>
 
-        <div id="gallery-container">
+        <div id="gallery-view" class="hidden">
             <h2>Community Gallery</h2>
             <div id="gallery-grid">
                 <!-- Gallery items will be injected here by script.js -->
