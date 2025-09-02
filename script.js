@@ -142,6 +142,7 @@ generateBtn.addEventListener('click', async () => {
         const plushieMaterial = document.getElementById('plushie-material').value;
         const plushieAccessory = document.getElementById('plushie-accessory').value;
         const includePlushieBackground = document.getElementById('plushie-background-checkbox').checked;
+        const userPromptInput = document.getElementById('user-prompt-input').value;
 
         // 1. AI call to analyze image and create a prompt
         const analysisCompletion = await websim.chat.completions.create({
@@ -154,12 +155,13 @@ generateBtn.addEventListener('click', async () => {
                     1. Identify all primary subjects in the reference image (e.g., people, animals, objects).
                     2. Construct a short, descriptive prompt that transforms ALL identified subjects into plush toys, according to the user's specified style and material.
                     3. If an accessory is chosen (and is not 'None'), apply it to the main subject(s) where appropriate (e.g., "all wearing cute bowties").
-                    4. Handle the background based on the user's choice:
+                    4. If the user provides extra details, intelligently merge them into the prompt. For example, if they ask for 'a grumpy expression', add that to the description of the subject.
+                    5. Handle the background based on the user's choice:
                         - If 'includePlushieBackground' is 'true', describe the background also being transformed into a plushie-like diorama, made of materials like felt, yarn, and cotton.
                         - If 'includePlushieBackground' is 'false', the prompt should specify a simple, neutral background like "product photography, on a clean white background" to isolate the plushie subjects.
                     
                     Example for multiple subjects and no plushie background: "A cute, chibi-style plush toy of the two people, made of soft yarn, based on the reference image. 3D render, product photography, on a clean white background."
-                    Example for single subject with plushie background: "A felt-style plush toy of the dog, wearing a tiny top hat. The background is also a diorama made of felt and stitched fabric, based on the reference image."
+                    Example for single subject with user details and plushie background: "A felt-style plush toy of the dog, wearing a tiny top hat and a monocle, with a grumpy expression. The background is also a diorama made of felt and stitched fabric, based on the reference image."
 
                     Respond ONLY with a JSON object in the format: { "prompt": "your_generated_prompt_here" }. Do not include any other text or explanation.`,
                 },
@@ -172,7 +174,8 @@ generateBtn.addEventListener('click', async () => {
                             - Style: ${plushieStyle}
                             - Material: ${plushieMaterial}
                             - Accessory: ${plushieAccessory}
-                            - Include Plushie Background: ${includePlushieBackground}`,
+                            - Include Plushie Background: ${includePlushieBackground}
+                            - User Details: ${userPromptInput || 'None'}`,
                         },
                         {
                             type: "image_url",
