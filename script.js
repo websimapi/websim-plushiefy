@@ -217,6 +217,7 @@ function updatePreview(dataUrl) {
             imagePreview.style.display = 'block';
             previewPlaceholder.style.display = 'none';
             drawingTools.classList.remove('hidden');
+            clearCanvas(); // Explicitly clear any previous drawings
         };
         img.src = dataUrl;
     } else {
