@@ -95,7 +95,7 @@ backToStep1Btn.addEventListener('click', () => showStep(1));
 startOverBtn.addEventListener('click', () => {
     // Reset state for a new creation
     imageDataUrl = null;
-    updatePreview(null);
+    updatePreview(null); // This is synchronous when url is null, no await needed.
     clearCanvas();
     drawingTools.classList.add('hidden');
     resultImage.src = '';
@@ -161,14 +161,14 @@ toggleCameraBtn.addEventListener('click', () => {
     startWebcam(currentFacingMode);
 });
 
-capturePhotoBtn.addEventListener('click', () => {
+capturePhotoBtn.addEventListener('click', async () => {
     webcamCanvas.width = webcamVideo.videoWidth;
     webcamCanvas.height = webcamVideo.videoHeight;
     const context = webcamCanvas.getContext('2d');
     context.drawImage(webcamVideo, 0, 0, webcamCanvas.width, webcamCanvas.height);
     imageDataUrl = webcamCanvas.toDataURL('image/png');
     
-    updatePreview(imageDataUrl);
+    await updatePreview(imageDataUrl);
     nextToStep2Btn.disabled = false;
 
     // Stop webcam and reset buttons
@@ -180,53 +180,61 @@ uploadBtn.addEventListener('change', (event) => {
     const file = event.target.files[0];
     if (file) {
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             imageDataUrl = e.target.result;
-            updatePreview(imageDataUrl);
+            await updatePreview(imageDataUrl);
             nextToStep2Btn.disabled = false;
+            stopWebcam(); // Stop webcam if it's running
         };
         reader.readAsDataURL(file);
     }
 });
 
 function updatePreview(dataUrl) {
-    const img = new Image();
-    if (dataUrl) {
-        img.onload = () => {
-            // Match canvas to image dimensions for accurate drawing
-            const container = document.getElementById('image-preview-container');
-            const aspectRatio = img.width / img.height;
-            const containerWidth = container.clientWidth;
-            const containerHeight = container.clientHeight;
+    return new Promise((resolve, reject) => {
+        if (dataUrl) {
+            const img = new Image();
+            img.onload = () => {
+                // Match canvas to image dimensions for accurate drawing
+                const container = document.getElementById('image-preview-container');
+                const aspectRatio = img.width / img.height;
+                const containerWidth = container.clientWidth;
+                const containerHeight = container.clientHeight;
 
-            let newWidth = containerWidth;
-            let newHeight = newWidth / aspectRatio;
+                let newWidth = containerWidth;
+                let newHeight = newWidth / aspectRatio;
 
-            if (newHeight > containerHeight) {
-                newHeight = containerHeight;
-                newWidth = newHeight * aspectRatio;
-            }
+                if (newHeight > containerHeight) {
+                    newHeight = containerHeight;
+                    newWidth = newHeight * aspectRatio;
+                }
 
-            drawingCanvas.width = newWidth;
-            drawingCanvas.height = newHeight;
+                drawingCanvas.width = newWidth;
+                drawingCanvas.height = newHeight;
 
-            imagePreview.style.width = `${newWidth}px`;
-            imagePreview.style.height = `${newHeight}px`;
+                imagePreview.style.width = `${newWidth}px`;
+                imagePreview.style.height = `${newHeight}px`;
 
-            imagePreview.src = dataUrl;
-            imagePreview.style.display = 'block';
-            previewPlaceholder.style.display = 'none';
-            drawingTools.classList.remove('hidden');
-            clearCanvas(); // Explicitly clear any previous drawings
-        };
-        img.src = dataUrl;
-    } else {
-        imagePreview.src = '#';
-        imagePreview.style.display = 'none';
-        previewPlaceholder.style.display = 'block';
-        nextToStep2Btn.disabled = true;
-        drawingTools.classList.add('hidden');
-    }
+                imagePreview.src = dataUrl;
+                imagePreview.style.display = 'block';
+                previewPlaceholder.style.display = 'none';
+                drawingTools.classList.remove('hidden');
+                clearCanvas(); // Explicitly clear any previous drawings
+                resolve();
+            };
+            img.onerror = () => {
+                reject(new Error('Image failed to load.'));
+            };
+            img.src = dataUrl;
+        } else {
+            imagePreview.src = '#';
+            imagePreview.style.display = 'none';
+            previewPlaceholder.style.display = 'block';
+            nextToStep2Btn.disabled = true;
+            drawingTools.classList.add('hidden');
+            resolve();
+        }
+    });
 }
 
 // --- Drawing Canvas Functions ---
@@ -308,7 +316,7 @@ eraserBtn.addEventListener('click', () => {
     brushBtn.classList.remove('active');
 });
 
-blankCanvasBtn.addEventListener('click', () => {
+blankCanvasBtn.addEventListener('click', async () => {
     // Create a white background image
     const tempCanvas = document.createElement('canvas');
     const container = document.getElementById('image-preview-container');
@@ -319,8 +327,7 @@ blankCanvasBtn.addEventListener('click', () => {
     tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
     
     imageDataUrl = tempCanvas.toDataURL('image/png');
-    updatePreview(imageDataUrl);
-    clearCanvas();
+    await updatePreview(imageDataUrl);
     nextToStep2Btn.disabled = false;
     stopWebcam();
 });
