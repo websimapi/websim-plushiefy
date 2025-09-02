@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plushie Creator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app-container">
+        <header>
+            <h1>Plushie Creator</h1>
+            <p>Turn anything into a cuddly plush toy!</p>
+        </header>
+
+        <main>
+            <div class="column" id="input-column">
+                <h2>1. Provide an Image</h2>
+                <div id="image-source">
+                    <video id="webcam-video" autoplay playsinline></video>
+                    <canvas id="webcam-canvas" style="display:none;"></canvas>
+                    <div id="image-preview-container">
+                        <img id="image-preview" src="#" alt="Your image preview">
+                        <p id="preview-placeholder">Your photo will appear here</p>
+                    </div>
+                    <div class="button-group">
+                        <button id="start-webcam-btn">Start Webcam</button>
+                        <button id="capture-photo-btn" class="hidden">Capture Photo</button>
+                        <label for="upload-btn" class="button">Upload Photo</label>
+                        <input type="file" id="upload-btn" accept="image/*" style="display: none;">
+                    </div>
+                </div>
+
+                <h2>2. Customize Your Plushie</h2>
+                <div id="customization-options">
+                    <div class="form-group">
+                        <label for="plushie-style">Style</label>
+                        <select id="plushie-style">
+                            <option value="Cute">Cute</option>
+                            <option value="Chibi">Chibi</option>
+                            <option value="Amigurumi (Crocheted)">Amigurumi (Crocheted)</option>
+                            <option value="Felt">Felt</option>
+                            <option value="Realistic">Realistic</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="plushie-material">Material</label>
+                        <select id="plushie-material">
+                            <option value="Fuzzy Fleece">Fuzzy Fleece</option>
+                            <option value="Soft Yarn">Soft Yarn</option>
+                            <option value="Smooth Felt">Smooth Felt</option>
+                            <option value="Plush Velvet">Plush Velvet</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="plushie-accessory">Accessory</label>
+                        <select id="plushie-accessory">
+                            <option value="None">None</option>
+                            <option value="a cute bowtie">Cute Bowtie</option>
+                            <option value="a tiny top hat">Tiny Top Hat</option>
+                            <option value="a cozy scarf">Cozy Scarf</option>
+                            <option value="an embroidered heart">Embroidered Heart</option>
+                        </select>
+                    </div>
+                </div>
+                 <button id="generate-btn">3. Generate Plushie!</button>
+            </div>
+
+            <div class="column" id="output-column">
+                <h2>Your Plushie</h2>
+                <div id="result-container">
+                    <div id="loading-indicator" class="hidden">
+                        <div class="spinner"></div>
+                        <p>Stitching your plushie...</p>
+                    </div>
+                    <img id="result-image" src="" alt="Generated plushie">
+                </div>
+                <div id="prompt-container" class="hidden">
+                    <h3>Generated Prompt:</h3>
+                    <p id="prompt-text"></p>
+                </div>
+                 <div id="share-container" class="hidden">
+                    <h3>Share Your Creation</h3>
+                    <div class="form-group-inline">
+                        <input type="checkbox" id="include-portrait-checkbox" checked>
+                        <label for="include-portrait-checkbox">Include original image</label>
+                    </div>
+                    <button id="share-btn">Share to Gallery</button>
+                    <button id="download-btn">Download Plushie</button>
+                </div>
+            </div>
+        </main>
+
+        <div id="gallery-container">
+            <h2>Community Gallery</h2>
+            <div id="gallery-grid">
+                <!-- Gallery items will be injected here by script.js -->
+            </div>
+        </div>
+    </div>
+    <script type="importmap">
+    {
+      "imports": {
+        "@websim/websim-socket": "https://esm.websim.com/@websim/websim-socket"
+      }
+    }
+    </script>
+    <script type="module" src="script.js"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4c6229722a6346bc8eb5cb0e5eae5d41","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>

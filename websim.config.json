@@ -1,0 +1,32 @@
+{
+  "database": {
+    "schema": {
+      "plushies_v1": {
+        "generated_plushie_url": {
+          "type": "text",
+          "description": "URL of the generated plushie image"
+        },
+        "original_image_url": {
+          "type": "text",
+          "description": "URL of the original user-provided image (optional)"
+        },
+        "prompt": {
+          "type": "text",
+          "description": "The full prompt used for generation"
+        },
+        "plushie_style": {
+          "type": "text",
+          "description": "e.g., Cute, Chibi"
+        },
+        "plushie_material": {
+          "type": "text",
+          "description": "e.g., Fuzzy Fleece, Soft Yarn"
+        },
+        "plushie_accessory": {
+          "type": "text",
+          "description": "e.g., Bowtie, Hat"
+        }
+      }
+    }
+  }
+}
