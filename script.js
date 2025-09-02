@@ -8,6 +8,7 @@ const imagePreview = document.getElementById('image-preview');
 const previewPlaceholder = document.getElementById('preview-placeholder');
 const startWebcamBtn = document.getElementById('start-webcam-btn');
 const capturePhotoBtn = document.getElementById('capture-photo-btn');
+const toggleCameraBtn = document.getElementById('toggle-camera-btn');
 const uploadBtn = document.getElementById('upload-btn');
 const generateBtn = document.getElementById('generate-btn');
 const loadingIndicator = document.getElementById('loading-indicator');
@@ -22,6 +23,8 @@ const galleryGrid = document.getElementById('gallery-grid');
 
 let imageDataUrl = null;
 let lastGeneratedData = {};
+let mediaStream = null;
+let currentFacingMode = 'user'; // 'user' for front, 'environment' for back
 
 // Helper to convert data URL to a File object
 async function dataUrlToFile(dataUrl, fileName) {
@@ -31,19 +34,59 @@ async function dataUrlToFile(dataUrl, fileName) {
 }
 
 // --- Webcam Functions ---
-startWebcamBtn.addEventListener('click', async () => {
+async function startWebcam(facingMode) {
+    if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+    }
+
+    const constraints = {
+        video: {
+            facingMode: facingMode
+        }
+    };
+
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        webcamVideo.srcObject = stream;
+        mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+        webcamVideo.srcObject = mediaStream;
         webcamVideo.style.display = 'block';
         imagePreview.style.display = 'none';
         previewPlaceholder.style.display = 'none';
         startWebcamBtn.classList.add('hidden');
         capturePhotoBtn.classList.remove('hidden');
+        toggleCameraBtn.classList.remove('hidden');
     } catch (err) {
-        console.error("Error accessing webcam: ", err);
-        alert("Could not access webcam. Please check permissions.");
+        console.error(`Error accessing webcam with facingMode ${facingMode}:`, err);
+        // Fallback for devices that don't support facingMode or if one camera is missing
+        if (facingMode === 'environment') {
+            alert("Could not access back camera. Trying front camera.");
+            currentFacingMode = 'user';
+            await startWebcam('user'); // Attempt to start with the front camera
+        } else {
+            alert("Could not access webcam. Please check permissions.");
+            // Reset buttons if it fails completely
+            stopWebcam();
+        }
     }
+}
+
+function stopWebcam() {
+    if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+        mediaStream = null;
+    }
+    webcamVideo.style.display = 'none';
+    capturePhotoBtn.classList.add('hidden');
+    toggleCameraBtn.classList.add('hidden');
+    startWebcamBtn.classList.remove('hidden');
+}
+
+startWebcamBtn.addEventListener('click', () => {
+    startWebcam(currentFacingMode);
+});
+
+toggleCameraBtn.addEventListener('click', () => {
+    currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+    startWebcam(currentFacingMode);
 });
 
 capturePhotoBtn.addEventListener('click', () => {
@@ -55,11 +98,8 @@ capturePhotoBtn.addEventListener('click', () => {
     
     updatePreview(imageDataUrl);
 
-    // Stop webcam
-    webcamVideo.srcObject.getTracks().forEach(track => track.stop());
-    webcamVideo.style.display = 'none';
-    capturePhotoBtn.classList.add('hidden');
-    startWebcamBtn.classList.remove('hidden');
+    // Stop webcam and reset buttons
+    stopWebcam();
 });
 
 // --- File Upload Function ---
