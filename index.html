@@ -9,83 +9,118 @@
 <body>
     <div id="app-container">
         <header>
-            <img src="logo.png" alt="Plushie Creator Logo" class="logo">
             <h1>Plushie Creator</h1>
             <p>Turn anything into a cuddly plush toy!</p>
+            <nav id="main-nav">
+                <button id="show-creator-btn" class="nav-btn active">Create</button>
+                <button id="show-gallery-btn" class="nav-btn">Gallery</button>
+            </nav>
         </header>
 
-        <main>
-            <div class="column" id="creation-panel">
-                <div class="step">
-                    <h2>1. Provide an Image</h2>
-                    <div id="image-source">
-                        <video id="webcam-video" autoplay playsinline></video>
-                        <canvas id="webcam-canvas" style="display:none;"></canvas>
-                        <div id="image-preview-container">
-                            <img id="image-preview" src="#" alt="Your image preview">
-                            <p id="preview-placeholder">Your photo will appear here</p>
-                        </div>
-                        <div class="button-group">
-                            <button id="start-webcam-btn">Start Webcam</button>
-                            <button id="capture-photo-btn" class="hidden">Capture Photo</button>
-                            <button id="toggle-camera-btn" class="hidden">Toggle Camera</button>
-                            <label for="upload-btn" class="button">Upload Photo</label>
-                            <input type="file" id="upload-btn" accept="image/*" style="display: none;">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <h2>2. Customize Your Plushie</h2>
-                    <div id="customization-options">
-                        <div class="form-group">
-                            <label for="plushie-style">Style</label>
-                            <select id="plushie-style">
-                                <option value="Cute">Cute</option>
-                                <option value="Chibi">Chibi</option>
-                                <option value="Amigurumi (Crocheted)">Amigurumi (Crocheted)</option>
-                                <option value="Felt">Felt</option>
-                                <option value="Realistic">Realistic</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="plushie-material">Material</label>
-                            <select id="plushie-material">
-                                <option value="Fuzzy Fleece">Fuzzy Fleece</option>
-                                <option value="Soft Yarn">Soft Yarn</option>
-                                <option value="Smooth Felt">Smooth Felt</option>
-                                <option value="Plush Velvet">Plush Velvet</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="plushie-accessory">Accessory</label>
-                            <select id="plushie-accessory">
-                                <option value="None">None</option>
-                                <option value="a cute bowtie">Cute Bowtie</option>
-                                <option value="a tiny top hat">Tiny Top Hat</option>
-                                <option value="a cozy scarf">Cozy Scarf</option>
-                                <option value="an embroidered heart">Embroidered Heart</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div id="advanced-options-container">
-                        <details>
-                            <summary>Advanced Options</summary>
-                            <div class="form-group">
-                                <label for="user-prompt-input">Describe your plushie in more detail:</label>
-                                <textarea id="user-prompt-input" rows="3" placeholder="e.g., 'a grumpy cat with a monocle'"></textarea>
-                            </div>
-                        </details>
-                    </div>
-                    <div class="form-group-inline extra-options">
-                        <input type="checkbox" id="plushie-background-checkbox">
-                        <label for="plushie-background-checkbox">Make background a plushie too</label>
-                    </div>
-                </div>
-                 <button id="generate-btn">3. Generate Plushie!</button>
+        <main id="creator-view">
+            <div id="step-indicator-container">
+                <div class="step-indicator active" data-step="1">1. Image</div>
+                <div class="step-indicator-line"></div>
+                <div class="step-indicator" data-step="2">2. Customize</div>
+                <div class="step-indicator-line"></div>
+                <div class="step-indicator" data-step="3">3. Result</div>
             </div>
 
-            <div class="column" id="output-panel">
+            <!-- Step 1: Image -->
+            <div id="step-1" class="step active">
+                <h2>1. Provide an Image</h2>
+                <div id="image-source">
+                    <video id="webcam-video" autoplay playsinline></video>
+                    <canvas id="webcam-canvas" style="display:none;"></canvas>
+                    <div id="image-preview-container">
+                        <img id="image-preview" src="#" alt="Your image preview">
+                        <canvas id="drawing-canvas"></canvas>
+                        <p id="preview-placeholder">Your photo will appear here</p>
+                    </div>
+                    <div id="drawing-tools" class="hidden">
+                        <div class="tool-group">
+                            <label for="color-picker">Color</label>
+                            <input type="color" id="color-picker" value="#e07a5f">
+                        </div>
+                        <div class="tool-group brush-size-group">
+                            <label for="brush-size">Size</label>
+                            <input type="range" id="brush-size" min="1" max="50" value="5">
+                        </div>
+                        <div class="tool-group button-tool-group">
+                            <button id="brush-btn" class="tool-btn active">Brush</button>
+                            <button id="eraser-btn" class="tool-btn">Eraser</button>
+                            <button id="clear-btn" class="tool-btn">Clear</button>
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <button id="start-webcam-btn">Start Webcam</button>
+                        <button id="capture-photo-btn" class="hidden">Capture Photo</button>
+                        <button id="toggle-camera-btn" class="hidden">Toggle Camera</button>
+                        <label for="upload-btn" class="button">Upload Photo</label>
+                        <input type="file" id="upload-btn" accept="image/*" style="display: none;">
+                        <button id="blank-canvas-btn">Draw from Scratch</button>
+                    </div>
+                </div>
+                <div class="step-nav">
+                    <button id="next-to-step-2" disabled>Next: Customize</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Customize -->
+            <div id="step-2" class="step">
+                <h2>2. Customize Your Plushie</h2>
+                <div id="customization-options">
+                    <div class="form-group">
+                        <label for="plushie-style">Style</label>
+                        <select id="plushie-style">
+                            <option value="Cute">Cute</option>
+                            <option value="Chibi">Chibi</option>
+                            <option value="Amigurumi (Crocheted)">Amigurumi (Crocheted)</option>
+                            <option value="Felt">Felt</option>
+                            <option value="Realistic">Realistic</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="plushie-material">Material</label>
+                        <select id="plushie-material">
+                            <option value="Fuzzy Fleece">Fuzzy Fleece</option>
+                            <option value="Soft Yarn">Soft Yarn</option>
+                            <option value="Smooth Felt">Smooth Felt</option>
+                            <option value="Plush Velvet">Plush Velvet</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="plushie-accessory">Accessory</label>
+                        <select id="plushie-accessory">
+                            <option value="None">None</option>
+                            <option value="a cute bowtie">Cute Bowtie</option>
+                            <option value="a tiny top hat">Tiny Top Hat</option>
+                            <option value="a cozy scarf">Cozy Scarf</option>
+                            <option value="an embroidered heart">Embroidered Heart</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="advanced-options-container">
+                    <details>
+                        <summary>Advanced Options</summary>
+                        <div class="form-group">
+                            <label for="user-prompt-input">Describe your plushie in more detail:</label>
+                            <textarea id="user-prompt-input" rows="3" placeholder="e.g., 'a grumpy cat with a monocle', 'wearing a superhero cape'"></textarea>
+                        </div>
+                    </details>
+                </div>
+                <div class="form-group-inline extra-options">
+                    <input type="checkbox" id="plushie-background-checkbox">
+                    <label for="plushie-background-checkbox">Make background a plushie too</label>
+                </div>
+                <div class="step-nav">
+                    <button id="back-to-step-1">Back</button>
+                    <button id="generate-btn">Generate Plushie!</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Result -->
+            <div id="step-3" class="step">
                 <h2>Your Plushie</h2>
                 <div id="result-container">
                     <div id="loading-indicator" class="hidden">
@@ -93,9 +128,6 @@
                         <p>Stitching your plushie...</p>
                     </div>
                     <img id="result-image" src="" alt="Generated plushie">
-                    <div id="output-placeholder">
-                        <p>Your creation will appear here!</p>
-                    </div>
                 </div>
                 <div id="prompt-container" class="hidden">
                     <h3>Generated Prompt:</h3>
@@ -106,42 +138,24 @@
                         <input type="checkbox" id="include-portrait-checkbox" checked>
                         <label for="include-portrait-checkbox">Include original image</label>
                     </div>
-                    <button id="share-btn">Share to Gallery</button>
-                    <button id="download-btn">Download Plushie</button>
+                    <div class="button-group">
+                         <button id="share-btn">Share to Gallery</button>
+                         <button id="download-btn">Download</button>
+                    </div>
+                </div>
+                <div class="step-nav">
+                     <button id="start-over-btn">Create Another</button>
                 </div>
             </div>
         </main>
 
-        <section id="gallery-section">
+        <div id="gallery-view" class="hidden">
             <h2>Community Gallery</h2>
             <div id="gallery-grid">
                 <!-- Gallery items will be injected here by script.js -->
             </div>
-        </section>
-    </div>
-
-    <!-- Gallery Modal -->
-    <div id="gallery-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <button id="modal-close-btn" class="modal-close">&times;</button>
-            <div class="modal-body">
-                <div class="modal-image-container">
-                    <img id="modal-plushie-img" src="" alt="Generated plushie">
-                    <a id="modal-original-link" href="#" target="_blank" title="View original image">
-                        <img id="modal-original-img" src="" alt="Original image">
-                    </a>
-                </div>
-                <div class="modal-details">
-                    <p><strong>Creator:</strong> <span id="modal-creator"></span></p>
-                    <p><strong>Style:</strong> <span id="modal-style"></span></p>
-                    <p><strong>Material:</strong> <span id="modal-material"></span></p>
-                    <p class="modal-prompt"><strong>Prompt:</strong> <span id="modal-prompt-text"></span></p>
-                    <button id="modal-download-btn">Download Plushie</button>
-                </div>
-            </div>
         </div>
     </div>
-
     <script type="importmap">
     {
       "imports": {
