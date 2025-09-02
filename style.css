@@ -38,6 +38,50 @@ body {
     box-shadow: 8px 8px 0px #3d405b;
 }
 
+#welcome-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(61, 64, 91, 0.85);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    opacity: 1;
+    transition: opacity 0.5s ease-out;
+}
+
+#welcome-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#welcome-overlay img {
+    max-width: 90%;
+    max-height: 60%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.3));
+}
+
+.overlay-text {
+    font-family: var(--font-family);
+    color: var(--bg-color);
+    text-align: center;
+    margin-top: 20px;
+    font-size: 1.5rem;
+    text-shadow: 2px 2px 0px var(--font-color);
+}
+
+.tap-text {
+    font-size: 1rem;
+    margin-top: 10px;
+    opacity: 0.8;
+}
+
 header {
     text-align: center;
     border-bottom: var(--border-style);

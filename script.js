@@ -2,6 +2,7 @@ import { WebsimSocket } from '@websim/websim-socket';
 
 const room = new WebsimSocket();
 
+const welcomeOverlay = document.getElementById('welcome-overlay');
 const webcamVideo = document.getElementById('webcam-video');
 const webcamCanvas = document.getElementById('webcam-canvas');
 const imagePreview = document.getElementById('image-preview');
@@ -22,6 +23,15 @@ const galleryGrid = document.getElementById('gallery-grid');
 
 let imageDataUrl = null;
 let lastGeneratedData = {};
+
+// --- Welcome Overlay ---
+welcomeOverlay.addEventListener('click', () => {
+    welcomeOverlay.classList.add('hidden');
+    // Set display to none after the transition to remove it from the accessibility tree and prevent interference.
+    setTimeout(() => {
+        welcomeOverlay.style.display = 'none';
+    }, 500); // Should match the transition duration in CSS
+});
 
 // Helper to convert data URL to a File object
 async function dataUrlToFile(dataUrl, fileName) {
