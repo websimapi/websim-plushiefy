@@ -2,24 +2,12 @@ import { WebsimSocket } from '@websim/websim-socket';
 
 const room = new WebsimSocket();
 
-// View switching
-const creatorView = document.getElementById('creator-view');
-const galleryView = document.getElementById('gallery-view');
-const showCreatorBtn = document.getElementById('show-creator-btn');
-const showGalleryBtn = document.getElementById('show-gallery-btn');
-
-// Step navigation
-const steps = document.querySelectorAll('.step');
-const stepIndicators = document.querySelectorAll('.step-indicator');
-const nextToStep2Btn = document.getElementById('next-to-step-2');
-const backToStep1Btn = document.getElementById('back-to-step-1');
-const startOverBtn = document.getElementById('start-over-btn');
-
-// Core elements
+// DOM Elements
 const webcamVideo = document.getElementById('webcam-video');
 const webcamCanvas = document.getElementById('webcam-canvas');
 const imagePreview = document.getElementById('image-preview');
 const previewPlaceholder = document.getElementById('preview-placeholder');
+const outputPlaceholder = document.getElementById('output-placeholder');
 const startWebcamBtn = document.getElementById('start-webcam-btn');
 const capturePhotoBtn = document.getElementById('capture-photo-btn');
 const toggleCameraBtn = document.getElementById('toggle-camera-btn');
@@ -34,11 +22,22 @@ const shareBtn = document.getElementById('share-btn');
 const downloadBtn = document.getElementById('download-btn');
 const includePortraitCheckbox = document.getElementById('include-portrait-checkbox');
 const galleryGrid = document.getElementById('gallery-grid');
+const modal = document.getElementById('gallery-modal');
+const modalCloseBtn = document.getElementById('modal-close-btn');
+const modalPlushieImg = document.getElementById('modal-plushie-img');
+const modalOriginalLink = document.getElementById('modal-original-link');
+const modalOriginalImg = document.getElementById('modal-original-img');
+const modalCreator = document.getElementById('modal-creator');
+const modalStyle = document.getElementById('modal-style');
+const modalMaterial = document.getElementById('modal-material');
+const modalPromptText = document.getElementById('modal-prompt-text');
+const modalDownloadBtn = document.getElementById('modal-download-btn');
 
 let imageDataUrl = null;
 let lastGeneratedData = {};
 let mediaStream = null;
 let currentFacingMode = 'user'; // 'user' for front, 'environment' for back
+let galleryData = [];
 
 // Helper to convert data URL to a File object
 async function dataUrlToFile(dataUrl, fileName) {
@@ -46,49 +45,6 @@ async function dataUrlToFile(dataUrl, fileName) {
     const blob = await res.blob();
     return new File([blob], fileName, { type: 'image/png' });
 }
-
-// --- View and Step Management ---
-function showView(viewToShow) {
-    creatorView.classList.add('hidden');
-    galleryView.classList.add('hidden');
-    showCreatorBtn.classList.remove('active');
-    showGalleryBtn.classList.remove('active');
-
-    if (viewToShow === 'creator') {
-        creatorView.classList.remove('hidden');
-        showCreatorBtn.classList.add('active');
-    } else {
-        galleryView.classList.remove('hidden');
-        showGalleryBtn.classList.add('active');
-    }
-}
-
-function showStep(stepNumber) {
-    steps.forEach(step => step.classList.remove('active'));
-    document.getElementById(`step-${stepNumber}`).classList.add('active');
-
-    stepIndicators.forEach(indicator => {
-        indicator.classList.remove('active');
-        if (parseInt(indicator.dataset.step) <= stepNumber) {
-            indicator.classList.add('active');
-        }
-    });
-}
-
-showCreatorBtn.addEventListener('click', () => showView('creator'));
-showGalleryBtn.addEventListener('click', () => showView('gallery'));
-nextToStep2Btn.addEventListener('click', () => showStep(2));
-backToStep1Btn.addEventListener('click', () => showStep(1));
-startOverBtn.addEventListener('click', () => {
-    // Reset state for a new creation
-    imageDataUrl = null;
-    updatePreview(null);
-    resultImage.src = '';
-    shareContainer.classList.add('hidden');
-    promptContainer.classList.add('hidden');
-    document.getElementById('user-prompt-input').value = '';
-    showStep(1);
-});
 
 // --- Webcam Functions ---
 async function startWebcam(facingMode) {
@@ -113,14 +69,12 @@ async function startWebcam(facingMode) {
         toggleCameraBtn.classList.remove('hidden');
     } catch (err) {
         console.error(`Error accessing webcam with facingMode ${facingMode}:`, err);
-        // Fallback for devices that don't support facingMode or if one camera is missing
         if (facingMode === 'environment') {
             alert("Could not access back camera. Trying front camera.");
             currentFacingMode = 'user';
-            await startWebcam('user'); // Attempt to start with the front camera
+            await startWebcam('user'); 
         } else {
             alert("Could not access webcam. Please check permissions.");
-            // Reset buttons if it fails completely
             stopWebcam();
         }
     }
@@ -154,9 +108,6 @@ capturePhotoBtn.addEventListener('click', () => {
     imageDataUrl = webcamCanvas.toDataURL('image/png');
     
     updatePreview(imageDataUrl);
-    nextToStep2Btn.disabled = false;
-
-    // Stop webcam and reset buttons
     stopWebcam();
 });
 
@@ -168,23 +119,15 @@ uploadBtn.addEventListener('change', (event) => {
         reader.onload = (e) => {
             imageDataUrl = e.target.result;
             updatePreview(imageDataUrl);
-            nextToStep2Btn.disabled = false;
         };
         reader.readAsDataURL(file);
     }
 });
 
 function updatePreview(dataUrl) {
-    if (dataUrl) {
-        imagePreview.src = dataUrl;
-        imagePreview.style.display = 'block';
-        previewPlaceholder.style.display = 'none';
-    } else {
-        imagePreview.src = '#';
-        imagePreview.style.display = 'none';
-        previewPlaceholder.style.display = 'block';
-        nextToStep2Btn.disabled = true;
-    }
+    imagePreview.src = dataUrl;
+    imagePreview.style.display = 'block';
+    previewPlaceholder.style.display = 'none';
 }
 
 // --- Generation Function ---
@@ -194,9 +137,8 @@ generateBtn.addEventListener('click', async () => {
         return;
     }
 
-    // Go to step 3 and show loading state
-    showStep(3);
     loadingIndicator.classList.remove('hidden');
+    outputPlaceholder.classList.add('hidden');
     resultImage.style.display = 'none';
     promptContainer.classList.add('hidden');
     shareContainer.classList.add('hidden');
@@ -204,14 +146,12 @@ generateBtn.addEventListener('click', async () => {
     generateBtn.textContent = 'Generating...';
 
     try {
-        // Get user selections
         const plushieStyle = document.getElementById('plushie-style').value;
         const plushieMaterial = document.getElementById('plushie-material').value;
         const plushieAccessory = document.getElementById('plushie-accessory').value;
         const includePlushieBackground = document.getElementById('plushie-background-checkbox').checked;
         const userPromptInput = document.getElementById('user-prompt-input').value;
 
-        // 1. AI call to analyze image and create a prompt
         const analysisCompletion = await websim.chat.completions.create({
             messages: [
                 {
@@ -259,12 +199,9 @@ generateBtn.addEventListener('click', async () => {
         
         promptText.textContent = generatedPrompt;
 
-        // 2. AI call to generate the image using the new prompt AND the reference image
         const imageResult = await websim.imageGen({
             prompt: generatedPrompt,
-            image_inputs: [
-                { url: imageDataUrl }
-            ],
+            image_inputs: [ { url: imageDataUrl } ],
             aspect_ratio: "1:1",
         });
         
@@ -274,21 +211,21 @@ generateBtn.addEventListener('click', async () => {
             prompt: generatedPrompt,
             plushie_style: plushieStyle,
             plushie_material: plushieMaterial,
-            plushie_accessory: document.getElementById('plushie-accessory').options[document.getElementById('plushie-accessory').selectedIndex].text, // get text label
+            plushie_accessory: document.getElementById('plushie-accessory').options[document.getElementById('plushie-accessory').selectedIndex].text,
         };
 
         resultImage.src = imageResult.url;
         
-        // Show result
         resultImage.style.display = 'block';
         promptContainer.classList.remove('hidden');
         shareContainer.classList.remove('hidden');
+        document.getElementById('output-panel').scrollIntoView({ behavior: 'smooth' });
 
     } catch (error) {
         console.error("Error during generation:", error);
         alert("An error occurred while generating the plushie. Please try again.");
+        outputPlaceholder.classList.remove('hidden');
     } finally {
-        // Hide loading state
         loadingIndicator.classList.add('hidden');
         generateBtn.disabled = false;
         generateBtn.textContent = '3. Generate Plushie!';
@@ -306,11 +243,9 @@ function downloadImage(url, filename) {
 }
 
 downloadBtn.addEventListener('click', () => {
-    if (!lastGeneratedData.generated_plushie_url) {
-        alert("Please generate a plushie first.");
-        return;
+    if (lastGeneratedData.generated_plushie_url) {
+        downloadImage(lastGeneratedData.generated_plushie_url, 'plushie.png');
     }
-    downloadImage(lastGeneratedData.generated_plushie_url, 'plushie.png');
 });
 
 // --- Sharing Functionality ---
@@ -339,9 +274,8 @@ shareBtn.addEventListener('click', async () => {
             plushie_accessory: lastGeneratedData.plushie_accessory,
         });
 
-        alert("Plushie shared successfully! Check it out in the gallery.");
-        showView('gallery');
-        startOverBtn.click(); // Reset the creator view for next time
+        alert("Plushie shared successfully!");
+        shareContainer.classList.add('hidden');
 
     } catch (error) {
         console.error("Error sharing plushie:", error);
@@ -354,48 +288,88 @@ shareBtn.addEventListener('click', async () => {
 
 // --- Gallery Rendering ---
 function renderGallery(plushies) {
-    galleryGrid.innerHTML = ''; // Clear existing items
-    const reversedPlushies = plushies.slice().reverse(); // Show newest first
-    reversedPlushies.forEach(plushie => {
+    galleryData = plushies.slice().reverse(); // Store newest first
+    galleryGrid.innerHTML = ''; 
+    galleryData.forEach((plushie, index) => {
         const item = document.createElement('div');
         item.className = 'gallery-item';
+        item.dataset.index = index;
 
         const img = document.createElement('img');
         img.src = plushie.generated_plushie_url;
         img.alt = `A ${plushie.plushie_style} plushie`;
+        img.loading = 'lazy';
 
         const overlay = document.createElement('div');
         overlay.className = 'gallery-item-overlay';
-        overlay.innerHTML = `
-            <strong>${plushie.username}</strong>
-            <span>${plushie.plushie_style}</span>
-            <span>(${plushie.plushie_material})</span>
-        `;
+        overlay.innerHTML = `<strong>${plushie.username}</strong>`;
         
         item.appendChild(img);
         item.appendChild(overlay);
-
-        // Add click to download
-        item.addEventListener('click', () => {
-            const filename = `${plushie.username}-${plushie.plushie_style}.png`;
-            downloadImage(plushie.generated_plushie_url, filename);
-        });
 
         if (plushie.original_image_url) {
             const thumb = document.createElement('div');
             thumb.className = 'original-portrait-thumb';
             thumb.style.backgroundImage = `url(${plushie.original_image_url})`;
-            thumb.title = "Click to view original image";
-            thumb.addEventListener('click', (e) => {
-                e.stopPropagation();
-                window.open(plushie.original_image_url, '_blank');
-            });
             item.appendChild(thumb);
         }
 
         galleryGrid.appendChild(item);
     });
 }
+
+// --- Modal Logic ---
+function openModal(index) {
+    const plushie = galleryData[index];
+    if (!plushie) return;
+
+    modalPlushieImg.src = plushie.generated_plushie_url;
+    modalCreator.textContent = plushie.username || 'Anonymous';
+    modalStyle.textContent = plushie.plushie_style || 'N/A';
+    modalMaterial.textContent = plushie.plushie_material || 'N/A';
+    modalPromptText.textContent = plushie.prompt || 'No prompt available.';
+
+    if (plushie.original_image_url) {
+        modalOriginalImg.src = plushie.original_image_url;
+        modalOriginalLink.href = plushie.original_image_url;
+        modalOriginalLink.classList.remove('hidden');
+    } else {
+        modalOriginalLink.classList.add('hidden');
+    }
+    
+    // Set up download button for this specific image
+    modalDownloadBtn.onclick = () => {
+         const filename = `${plushie.username}-${plushie.plushie_style}.png`;
+         downloadImage(plushie.generated_plushie_url, filename);
+    };
+
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+}
+
+function closeModal() {
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+galleryGrid.addEventListener('click', (e) => {
+    const galleryItem = e.target.closest('.gallery-item');
+    if (galleryItem && galleryItem.dataset.index) {
+        openModal(parseInt(galleryItem.dataset.index));
+    }
+});
+
+modalCloseBtn.addEventListener('click', closeModal);
+modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+        closeModal();
+    }
+});
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+        closeModal();
+    }
+});
 
 // Subscribe to gallery updates
 room.collection('plushies_v1').subscribe(renderGallery);
